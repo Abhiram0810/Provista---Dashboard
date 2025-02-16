@@ -1,0 +1,32 @@
+//All Logs in list 24hrs:
+AzureDiagnostics
+| where TimeGenerated > ago(24h)
+| order by TimeGenerated desc
+
+
+//Failed Logins:
+AzureDiagnostics
+| where Category == "SQLSecurityAuditEvents"
+| where action_name_s == "DATABASE AUTHENTICATION FAILED"
+| project TimeGenerated, action_name_s, database_name_s, client_ip_s, server_principal_name_s
+| order by TimeGenerated desc
+
+
+//Off-hours access:
+AzureDiagnostics
+| where Category == "SQLSecurityAuditEvents"
+| where action_name_s == "DATABASE AUTHENTICATION SUCCEEDED"
+| extend HourOfDay = datetime_part("hour", TimeGenerated)
+| where HourOfDay < 9 or HourOfDay >= 18
+| project TimeGenerated, HourOfDay, client_ip_s, server_principal_name_s
+| order by TimeGenerated desc
+
+//Logins from multiple locations:
+AzureDiagnostics
+| where Category == "SQLSecurityAuditEvents"
+| where action_name_s == "DATABASE AUTHENTICATION SUCCEEDED"
+| summarize Logins=count(), UniqueIPs=dcount(client_ip_s) by server_principal_name_s
+| where UniqueIPs > 1
+| order by Logins desc
+
+
