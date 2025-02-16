@@ -1,4 +1,4 @@
-//All Logs in list 24hrs:
+//All Logs in last 24hrs:
 AzureDiagnostics
 | where TimeGenerated > ago(24h)
 | order by TimeGenerated desc
